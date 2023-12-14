@@ -89,7 +89,7 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
     if (error) {
         *error = nil;
     }
-
+    
     zipFile zip = unzOpen(path.fileSystemRepresentation);
     if (zip == NULL) {
         if (error) {
@@ -99,7 +99,7 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
         }
         return NO;
     }
-
+    
     // Initialize passwordValid to YES (No password required)
     BOOL passwordValid = YES;
     int ret = unzGoToFirstFile(zip);
@@ -164,7 +164,7 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
     if (error) {
         *error = nil;
     }
-
+    
     zipFile zip = unzOpen(path.fileSystemRepresentation);
     if (zip == NULL) {
         if (error) {
@@ -174,7 +174,7 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
         }
         return @0;
     }
-
+    
     unsigned long long totalSize = 0;
     int ret = unzGoToFirstFile(zip);
     if (ret == UNZ_OK) {
@@ -198,16 +198,16 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
                 }
                 break;
             }
-
+            
             totalSize += fileInfo.uncompressed_size;
-
+            
             unzCloseCurrentFile(zip);
             ret = unzGoToNextFile(zip);
         } while (ret == UNZ_OK);
     }
-
+    
     unzClose(zip);
-
+    
     return [NSNumber numberWithUnsignedLongLong:totalSize];
 }
 
@@ -607,7 +607,7 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
                             unzCloseCurrentFile(zip);
                             // Log the error
                             NSLog(@"[SSZipArchive] Failed to open file on unzipping.(%@)", unzippingError);
-
+                            
                             // Break unzipping
                             success = NO;
                             break;
@@ -793,7 +793,7 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
                          keepParentDirectory:keepParentDirectory
                                 withPassword:password
                           andProgressHandler:nil
-            ];
+    ];
 }
 
 + (BOOL)createZipFileAtPath:(NSString *)path
@@ -830,7 +830,7 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
                 NSLog(@"[SSZipArchive] the archive path and the file path: %@ are the same, which is forbidden.", fullFilePath);
                 continue;
             }
-			
+            
             if (keepParentDirectory) {
                 fileName = [directoryPath.lastPathComponent stringByAppendingPathComponent:fileName];
             }
@@ -870,12 +870,12 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
                     success &= [zipArchive writeSymlinkFileAtPath:filePath withFileName:nil compressionLevel:Z_DEFAULT_COMPRESSION password:password AES:YES];
                 } else {
                     success &= [zipArchive writeFile:filePath withPassword:password];
-                }                  
+                }
             }
             success &= [zipArchive close];
         }
         return success;
-    }    
+    }
 }
 
 + (BOOL)createZipFileAtPath:(NSString *)path
@@ -925,7 +925,7 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
                         success &= [zipArchive writeFileAtPath:fullFilePath withFileName:fileName compressionLevel:compressionLevel password:password AES:aes];
                     } else {
                         success &= [zipArchive writeSymlinkFileAtPath:fullFilePath withFileName:fileName compressionLevel:compressionLevel password:password AES:aes];
-                    }                  
+                    }
                 } else {
                     // directory
                     if (![fileManager enumeratorAtPath:fullFilePath].nextObject) {
@@ -941,7 +941,7 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
             success &= [zipArchive close];
         }
         return success;
-    }    
+    }
 }
 
 - (BOOL)writeSymlinkFileAtPath:(NSString *)path withFileName:(nullable NSString *)fileName compressionLevel:(int)compressionLevel password:(nullable NSString *)password AES:(BOOL)aes
@@ -955,12 +955,12 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
         NSLog(@"[SSZipArchive] Failed to read sylink");
         return NO;
     }
-
+    
     if (!fileName) {
         fileName = path.lastPathComponent;
     }
     
-    zip_fileinfo zipInfo = {};    
+    zip_fileinfo zipInfo = {};
     [SSZipArchive zipInfo:&zipInfo setAttributesOfItemAtPath:path];
     
     //unpdate zipInfo.external_fa
@@ -969,7 +969,7 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
     uint32_t src_sys = 0;
     mz_os_get_file_attribs(path.fileSystemRepresentation, &src_attrib);
     src_sys = MZ_HOST_SYSTEM(MZ_VERSION_MADEBY);
-
+    
     if ((src_sys != MZ_HOST_SYSTEM_MSDOS) && (src_sys != MZ_HOST_SYSTEM_WINDOWS_NTFS)) {
         /* High bytes are OS specific attributes, low byte is always DOS attributes */
         if (mz_zip_attrib_convert(src_sys, src_attrib, MZ_HOST_SYSTEM_MSDOS, &target_attrib) == MZ_OK)
@@ -978,7 +978,7 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
     } else {
         zipInfo.external_fa = src_attrib;
     }
-
+    
     uint16_t version_madeby = 3 << 8;//UNIX
     int error = zipOpenNewFileInZip5(_zip, fileName.fileSystemRepresentation, &zipInfo, NULL, 0, NULL, 0, NULL, Z_DEFLATED, compressionLevel, 0, -MAX_WBITS, DEF_MEM_LEVEL, Z_DEFAULT_STRATEGY, password.UTF8String, aes, version_madeby, 0, 0);
     zipWriteInFileInZip(_zip, link_path, (uint32_t)strlen(link_path));
@@ -1030,7 +1030,8 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
 
 - (BOOL)writeFile:(NSString *)path withPassword:(nullable NSString *)password
 {
-    return [self writeFileAtPath:path withFileName:nil withPassword:password];
+    NSString * filename = [[path lastPathComponent] stringByRemovingPercentEncoding];
+    return [self writeFileAtPath:path withFileName: filename withPassword:password];
 }
 
 - (BOOL)writeFileAtPath:(NSString *)path withFileName:(nullable NSString *)fileName withPassword:(nullable NSString *)password
@@ -1154,280 +1155,280 @@ BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo);
     
     // if filename is non-unicode, detect and transform Encoding
     NSData *data = [NSData dataWithBytes:(const void *)filename length:sizeof(unsigned char) * size_filename];
-// Testing availability of @available (https://stackoverflow.com/a/46927445/1033581)
+    // Testing availability of @available (https://stackoverflow.com/a/46927445/1033581)
 #if __clang_major__ < 9
     // Xcode 8-
     if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber10_9_2) {
 #else
-    // Xcode 9+
-    if (@available(macOS 10.10, iOS 8.0, watchOS 2.0, tvOS 9.0, *)) {
+        // Xcode 9+
+        if (@available(macOS 10.10, iOS 8.0, watchOS 2.0, tvOS 9.0, *)) {
 #endif
-        // supported encodings are in [NSString availableStringEncodings]
-        [NSString stringEncodingForData:data encodingOptions:nil convertedString:&strPath usedLossyConversion:nil];
-    } else {
-        // fallback to a simple manual detect for macOS 10.9 or older
-        NSArray<NSNumber *> *encodings = @[@(kCFStringEncodingGB_18030_2000), @(kCFStringEncodingShiftJIS)];
-        for (NSNumber *encoding in encodings) {
-            strPath = [NSString stringWithCString:filename encoding:(NSStringEncoding)CFStringConvertEncodingToNSStringEncoding(encoding.unsignedIntValue)];
-            if (strPath) {
-                break;
+            // supported encodings are in [NSString availableStringEncodings]
+            [NSString stringEncodingForData:data encodingOptions:nil convertedString:&strPath usedLossyConversion:nil];
+        } else {
+            // fallback to a simple manual detect for macOS 10.9 or older
+            NSArray<NSNumber *> *encodings = @[@(kCFStringEncodingGB_18030_2000), @(kCFStringEncodingShiftJIS)];
+            for (NSNumber *encoding in encodings) {
+                strPath = [NSString stringWithCString:filename encoding:(NSStringEncoding)CFStringConvertEncodingToNSStringEncoding(encoding.unsignedIntValue)];
+                if (strPath) {
+                    break;
+                }
             }
         }
-    }
-    if (strPath) {
+        if (strPath) {
+            return strPath;
+        }
+        
+        // if filename encoding is non-detected, we default to something based on data
+        // _hexString is more readable than _base64RFC4648 for debugging unknown encodings
+        strPath = [data _hexString];
         return strPath;
     }
     
-    // if filename encoding is non-detected, we default to something based on data
-    // _hexString is more readable than _base64RFC4648 for debugging unknown encodings
-    strPath = [data _hexString];
-    return strPath;
-}
-
-+ (void)zipInfo:(zip_fileinfo *)zipInfo setAttributesOfItemAtPath:(NSString *)path
-{
-    NSDictionary *attr = [[NSFileManager defaultManager] attributesOfItemAtPath:path error: nil];
-    if (attr)
+    + (void)zipInfo:(zip_fileinfo *)zipInfo setAttributesOfItemAtPath:(NSString *)path
     {
-        NSDate *fileDate = (NSDate *)[attr objectForKey:NSFileModificationDate];
-        if (fileDate)
+        NSDictionary *attr = [[NSFileManager defaultManager] attributesOfItemAtPath:path error: nil];
+        if (attr)
         {
-            [self zipInfo:zipInfo setDate:fileDate];
+            NSDate *fileDate = (NSDate *)[attr objectForKey:NSFileModificationDate];
+            if (fileDate)
+            {
+                [self zipInfo:zipInfo setDate:fileDate];
+            }
+            
+            // Write permissions into the external attributes, for details on this see here: https://unix.stackexchange.com/a/14727
+            // Get the permissions value from the files attributes
+            NSNumber *permissionsValue = (NSNumber *)[attr objectForKey:NSFilePosixPermissions];
+            if (permissionsValue != nil) {
+                // Get the short value for the permissions
+                short permissionsShort = permissionsValue.shortValue;
+                
+                // Convert this into an octal by adding 010000, 010000 being the flag for a regular file
+                NSInteger permissionsOctal = 0100000 + permissionsShort;
+                
+                // Convert this into a long value
+                uLong permissionsLong = @(permissionsOctal).unsignedLongValue;
+                
+                // Store this into the external file attributes once it has been shifted 16 places left to form part of the second from last byte
+                
+                // Casted back to an unsigned int to match type of external_fa in minizip
+                zipInfo->external_fa = (unsigned int)(permissionsLong << 16L);
+            }
         }
+    }
+    
+    + (void)zipInfo:(zip_fileinfo *)zipInfo setDate:(NSDate *)date
+    {
+        NSCalendar *currentCalendar = SSZipArchive._gregorian;
+        NSCalendarUnit flags = NSCalendarUnitYear | NSCalendarUnitMonth | NSCalendarUnitDay | NSCalendarUnitHour | NSCalendarUnitMinute | NSCalendarUnitSecond;
+        NSDateComponents *components = [currentCalendar components:flags fromDate:date];
+        struct tm tmz_date;
+        tmz_date.tm_sec = (unsigned int)components.second;
+        tmz_date.tm_min = (unsigned int)components.minute;
+        tmz_date.tm_hour = (unsigned int)components.hour;
+        tmz_date.tm_mday = (unsigned int)components.day;
+        // ISO/IEC 9899 struct tm is 0-indexed for January but NSDateComponents for gregorianCalendar is 1-indexed for January
+        tmz_date.tm_mon = (unsigned int)components.month - 1;
+        // ISO/IEC 9899 struct tm is 0-indexed for AD 1900 but NSDateComponents for gregorianCalendar is 1-indexed for AD 1
+        tmz_date.tm_year = (unsigned int)components.year - 1900;
+        zipInfo->mz_dos_date = mz_zip_tm_to_dosdate(&tmz_date);
+    }
+    
+    + (NSCalendar *)_gregorian
+    {
+        static NSCalendar *gregorian;
+        static dispatch_once_t onceToken;
+        dispatch_once(&onceToken, ^{
+            gregorian = [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
+        });
         
-        // Write permissions into the external attributes, for details on this see here: https://unix.stackexchange.com/a/14727
-        // Get the permissions value from the files attributes
-        NSNumber *permissionsValue = (NSNumber *)[attr objectForKey:NSFilePosixPermissions];
-        if (permissionsValue != nil) {
-            // Get the short value for the permissions
-            short permissionsShort = permissionsValue.shortValue;
-            
-            // Convert this into an octal by adding 010000, 010000 being the flag for a regular file
-            NSInteger permissionsOctal = 0100000 + permissionsShort;
-            
-            // Convert this into a long value
-            uLong permissionsLong = @(permissionsOctal).unsignedLongValue;
-            
-            // Store this into the external file attributes once it has been shifted 16 places left to form part of the second from last byte
-            
-            // Casted back to an unsigned int to match type of external_fa in minizip
-            zipInfo->external_fa = (unsigned int)(permissionsLong << 16L);
-        }
+        return gregorian;
     }
-}
-
-+ (void)zipInfo:(zip_fileinfo *)zipInfo setDate:(NSDate *)date
-{
-    NSCalendar *currentCalendar = SSZipArchive._gregorian;
-    NSCalendarUnit flags = NSCalendarUnitYear | NSCalendarUnitMonth | NSCalendarUnitDay | NSCalendarUnitHour | NSCalendarUnitMinute | NSCalendarUnitSecond;
-    NSDateComponents *components = [currentCalendar components:flags fromDate:date];
-    struct tm tmz_date;
-    tmz_date.tm_sec = (unsigned int)components.second;
-    tmz_date.tm_min = (unsigned int)components.minute;
-    tmz_date.tm_hour = (unsigned int)components.hour;
-    tmz_date.tm_mday = (unsigned int)components.day;
-    // ISO/IEC 9899 struct tm is 0-indexed for January but NSDateComponents for gregorianCalendar is 1-indexed for January
-    tmz_date.tm_mon = (unsigned int)components.month - 1;
-    // ISO/IEC 9899 struct tm is 0-indexed for AD 1900 but NSDateComponents for gregorianCalendar is 1-indexed for AD 1
-    tmz_date.tm_year = (unsigned int)components.year - 1900;
-    zipInfo->mz_dos_date = mz_zip_tm_to_dosdate(&tmz_date);
-}
-
-+ (NSCalendar *)_gregorian
-{
-    static NSCalendar *gregorian;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        gregorian = [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
-    });
     
-    return gregorian;
-}
-
-// Format from http://newsgroups.derkeiler.com/Archive/Comp/comp.os.msdos.programmer/2009-04/msg00060.html
-// Two consecutive words, or a longword, YYYYYYYMMMMDDDDD hhhhhmmmmmmsssss
-// YYYYYYY is years from 1980 = 0
-// sssss is (seconds/2).
-//
-// 3658 = 0011 0110 0101 1000 = 0011011 0010 11000 = 27 2 24 = 2007-02-24
-// 7423 = 0111 0100 0010 0011 - 01110 100001 00011 = 14 33 3 = 14:33:06
-+ (NSDate *)_dateWithMSDOSFormat:(UInt32)msdosDateTime
-{
-    // the whole `_dateWithMSDOSFormat:` method is equivalent but faster than this one line,
-    // essentially because `mktime` is slow:
-    //NSDate *date = [NSDate dateWithTimeIntervalSince1970:dosdate_to_time_t(msdosDateTime)];
-    static const UInt32 kYearMask = 0xFE000000;
-    static const UInt32 kMonthMask = 0x1E00000;
-    static const UInt32 kDayMask = 0x1F0000;
-    static const UInt32 kHourMask = 0xF800;
-    static const UInt32 kMinuteMask = 0x7E0;
-    static const UInt32 kSecondMask = 0x1F;
+    // Format from http://newsgroups.derkeiler.com/Archive/Comp/comp.os.msdos.programmer/2009-04/msg00060.html
+    // Two consecutive words, or a longword, YYYYYYYMMMMDDDDD hhhhhmmmmmmsssss
+    // YYYYYYY is years from 1980 = 0
+    // sssss is (seconds/2).
+    //
+    // 3658 = 0011 0110 0101 1000 = 0011011 0010 11000 = 27 2 24 = 2007-02-24
+    // 7423 = 0111 0100 0010 0011 - 01110 100001 00011 = 14 33 3 = 14:33:06
+    + (NSDate *)_dateWithMSDOSFormat:(UInt32)msdosDateTime
+    {
+        // the whole `_dateWithMSDOSFormat:` method is equivalent but faster than this one line,
+        // essentially because `mktime` is slow:
+        //NSDate *date = [NSDate dateWithTimeIntervalSince1970:dosdate_to_time_t(msdosDateTime)];
+        static const UInt32 kYearMask = 0xFE000000;
+        static const UInt32 kMonthMask = 0x1E00000;
+        static const UInt32 kDayMask = 0x1F0000;
+        static const UInt32 kHourMask = 0xF800;
+        static const UInt32 kMinuteMask = 0x7E0;
+        static const UInt32 kSecondMask = 0x1F;
+        
+        NSAssert(0xFFFFFFFF == (kYearMask | kMonthMask | kDayMask | kHourMask | kMinuteMask | kSecondMask), @"[SSZipArchive] MSDOS date masks don't add up");
+        
+        NSDateComponents *components = [[NSDateComponents alloc] init];
+        components.year = 1980 + ((msdosDateTime & kYearMask) >> 25);
+        components.month = (msdosDateTime & kMonthMask) >> 21;
+        components.day = (msdosDateTime & kDayMask) >> 16;
+        components.hour = (msdosDateTime & kHourMask) >> 11;
+        components.minute = (msdosDateTime & kMinuteMask) >> 5;
+        components.second = (msdosDateTime & kSecondMask) * 2;
+        
+        NSDate *date = [self._gregorian dateFromComponents:components];
+        return date;
+    }
     
-    NSAssert(0xFFFFFFFF == (kYearMask | kMonthMask | kDayMask | kHourMask | kMinuteMask | kSecondMask), @"[SSZipArchive] MSDOS date masks don't add up");
+    @end
     
-    NSDateComponents *components = [[NSDateComponents alloc] init];
-    components.year = 1980 + ((msdosDateTime & kYearMask) >> 25);
-    components.month = (msdosDateTime & kMonthMask) >> 21;
-    components.day = (msdosDateTime & kDayMask) >> 16;
-    components.hour = (msdosDateTime & kHourMask) >> 11;
-    components.minute = (msdosDateTime & kMinuteMask) >> 5;
-    components.second = (msdosDateTime & kSecondMask) * 2;
+    int _zipOpenEntry(zipFile entry, NSString *name, const zip_fileinfo *zipfi, int level, NSString *password, BOOL aes)
+    {
+        // https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT
+        uint16_t made_on_darwin = 19 << 8;
+        //MZ_ZIP_FLAG_UTF8
+        uint16_t flag_base = 1 << 11;
+        return zipOpenNewFileInZip5(entry, name.fileSystemRepresentation, zipfi, NULL, 0, NULL, 0, NULL, Z_DEFLATED, level, 0, -MAX_WBITS, DEF_MEM_LEVEL, Z_DEFAULT_STRATEGY, password.UTF8String, aes, made_on_darwin, flag_base, 1);
+    }
     
-    NSDate *date = [self._gregorian dateFromComponents:components];
-    return date;
-}
-
-@end
-
-int _zipOpenEntry(zipFile entry, NSString *name, const zip_fileinfo *zipfi, int level, NSString *password, BOOL aes)
-{
-    // https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT
-    uint16_t made_on_darwin = 19 << 8;
-    //MZ_ZIP_FLAG_UTF8
-    uint16_t flag_base = 1 << 11;
-    return zipOpenNewFileInZip5(entry, name.fileSystemRepresentation, zipfi, NULL, 0, NULL, 0, NULL, Z_DEFLATED, level, 0, -MAX_WBITS, DEF_MEM_LEVEL, Z_DEFAULT_STRATEGY, password.UTF8String, aes, made_on_darwin, flag_base, 1);
-}
-
 #pragma mark - Private tools for file info
-
-BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo)
-{
-    //
-    // Determine whether this is a symbolic link:
-    // - File is stored with 'version made by' value of UNIX (3),
-    //   as per https://www.pkware.com/documents/casestudies/APPNOTE.TXT
-    //   in the upper byte of the version field.
-    // - BSD4.4 st_mode constants are stored in the high 16 bits of the
-    //   external file attributes (defacto standard, verified against libarchive)
-    //
-    // The original constants can be found here:
-    //    https://minnie.tuhs.org/cgi-bin/utree.pl?file=4.4BSD/usr/include/sys/stat.h
-    //
-    const uLong ZipUNIXVersion = 3;
-    const uLong BSD_SFMT = 0170000;
-    const uLong BSD_IFLNK = 0120000;
     
-    BOOL fileIsSymbolicLink = ((fileInfo->version >> 8) == ZipUNIXVersion) && BSD_IFLNK == (BSD_SFMT & (fileInfo->external_fa >> 16));
-    return fileIsSymbolicLink;
-}
-
+    BOOL _fileIsSymbolicLink(const unz_file_info *fileInfo)
+    {
+        //
+        // Determine whether this is a symbolic link:
+        // - File is stored with 'version made by' value of UNIX (3),
+        //   as per https://www.pkware.com/documents/casestudies/APPNOTE.TXT
+        //   in the upper byte of the version field.
+        // - BSD4.4 st_mode constants are stored in the high 16 bits of the
+        //   external file attributes (defacto standard, verified against libarchive)
+        //
+        // The original constants can be found here:
+        //    https://minnie.tuhs.org/cgi-bin/utree.pl?file=4.4BSD/usr/include/sys/stat.h
+        //
+        const uLong ZipUNIXVersion = 3;
+        const uLong BSD_SFMT = 0170000;
+        const uLong BSD_IFLNK = 0120000;
+        
+        BOOL fileIsSymbolicLink = ((fileInfo->version >> 8) == ZipUNIXVersion) && BSD_IFLNK == (BSD_SFMT & (fileInfo->external_fa >> 16));
+        return fileIsSymbolicLink;
+    }
+    
 #pragma mark - Private tools for unreadable encodings
-
-@implementation NSData (SSZipArchive)
-
-// `base64EncodedStringWithOptions` uses a base64 alphabet with '+' and '/'.
-// we got those alternatives to make it compatible with filenames: https://en.wikipedia.org/wiki/Base64
-// * modified Base64 encoding for IMAP mailbox names (RFC 3501): uses '+' and ','
-// * modified Base64 for URL and filenames (RFC 4648): uses '-' and '_'
-- (NSString *)_base64RFC4648
-{
-    NSString *strName = [self base64EncodedStringWithOptions:0];
-    strName = [strName stringByReplacingOccurrencesOfString:@"+" withString:@"-"];
-    strName = [strName stringByReplacingOccurrencesOfString:@"/" withString:@"_"];
-    return strName;
-}
-
-// initWithBytesNoCopy from NSProgrammer, Jan 25 '12: https://stackoverflow.com/a/9009321/1033581
-// hexChars from Peter, Aug 19 '14: https://stackoverflow.com/a/25378464/1033581
-// not implemented as too lengthy: a potential mapping improvement from Moose, Nov 3 '15: https://stackoverflow.com/a/33501154/1033581
-- (NSString *)_hexString
-{
-    const char *hexChars = "0123456789ABCDEF";
-    NSUInteger length = self.length;
-    const unsigned char *bytes = self.bytes;
-    char *chars = malloc(length * 2);
-    if (chars == NULL) {
-        // we directly raise an exception instead of using NSAssert to make sure assertion is not disabled as this is irrecoverable
-        [NSException raise:@"NSInternalInconsistencyException" format:@"failed malloc" arguments:nil];
-        return nil;
+    
+    @implementation NSData (SSZipArchive)
+    
+    // `base64EncodedStringWithOptions` uses a base64 alphabet with '+' and '/'.
+    // we got those alternatives to make it compatible with filenames: https://en.wikipedia.org/wiki/Base64
+    // * modified Base64 encoding for IMAP mailbox names (RFC 3501): uses '+' and ','
+    // * modified Base64 for URL and filenames (RFC 4648): uses '-' and '_'
+    - (NSString *)_base64RFC4648
+    {
+        NSString *strName = [self base64EncodedStringWithOptions:0];
+        strName = [strName stringByReplacingOccurrencesOfString:@"+" withString:@"-"];
+        strName = [strName stringByReplacingOccurrencesOfString:@"/" withString:@"_"];
+        return strName;
     }
-    char *s = chars;
-    NSUInteger i = length;
-    while (i--) {
-        *s++ = hexChars[*bytes >> 4];
-        *s++ = hexChars[*bytes & 0xF];
-        bytes++;
+    
+    // initWithBytesNoCopy from NSProgrammer, Jan 25 '12: https://stackoverflow.com/a/9009321/1033581
+    // hexChars from Peter, Aug 19 '14: https://stackoverflow.com/a/25378464/1033581
+    // not implemented as too lengthy: a potential mapping improvement from Moose, Nov 3 '15: https://stackoverflow.com/a/33501154/1033581
+    - (NSString *)_hexString
+    {
+        const char *hexChars = "0123456789ABCDEF";
+        NSUInteger length = self.length;
+        const unsigned char *bytes = self.bytes;
+        char *chars = malloc(length * 2);
+        if (chars == NULL) {
+            // we directly raise an exception instead of using NSAssert to make sure assertion is not disabled as this is irrecoverable
+            [NSException raise:@"NSInternalInconsistencyException" format:@"failed malloc" arguments:nil];
+            return nil;
+        }
+        char *s = chars;
+        NSUInteger i = length;
+        while (i--) {
+            *s++ = hexChars[*bytes >> 4];
+            *s++ = hexChars[*bytes & 0xF];
+            bytes++;
+        }
+        NSString *str = [[NSString alloc] initWithBytesNoCopy:chars
+                                                       length:length * 2
+                                                     encoding:NSASCIIStringEncoding
+                                                 freeWhenDone:YES];
+        return str;
     }
-    NSString *str = [[NSString alloc] initWithBytesNoCopy:chars
-                                                   length:length * 2
-                                                 encoding:NSASCIIStringEncoding
-                                             freeWhenDone:YES];
-    return str;
-}
-
-@end
-
+    
+    @end
+    
 #pragma mark Private tools for security
-
-@implementation NSString (SSZipArchive)
-
-// One implementation alternative would be to use the algorithm found at mz_path_resolve from https://github.com/nmoinvaz/minizip/blob/dev/mz_os.c,
-// but making sure to work with unichar values and not ascii values to avoid breaking Unicode characters containing 2E ('.') or 2F ('/') in their decomposition
-/// Sanitize path traversal characters to prevent directory backtracking. Ignoring these characters mimicks the default behavior of the Unarchiving tool on macOS.
-- (NSString *)_sanitizedPath
-{
-    // Change Windows paths to Unix paths: https://en.wikipedia.org/wiki/Path_(computing)
-    // Possible improvement: only do this if the archive was created on a non-Unix system
-    NSString *strPath = [self stringByReplacingOccurrencesOfString:@"\\" withString:@"/"];
     
-    // Percent-encode file path (where path is defined by https://tools.ietf.org/html/rfc8089)
-    // The key part is to allow characters "." and "/" and disallow "%".
-    // CharacterSet.urlPathAllowed seems to do the job
+    @implementation NSString (SSZipArchive)
+    
+    // One implementation alternative would be to use the algorithm found at mz_path_resolve from https://github.com/nmoinvaz/minizip/blob/dev/mz_os.c,
+    // but making sure to work with unichar values and not ascii values to avoid breaking Unicode characters containing 2E ('.') or 2F ('/') in their decomposition
+    /// Sanitize path traversal characters to prevent directory backtracking. Ignoring these characters mimicks the default behavior of the Unarchiving tool on macOS.
+    - (NSString *)_sanitizedPath
+    {
+        // Change Windows paths to Unix paths: https://en.wikipedia.org/wiki/Path_(computing)
+        // Possible improvement: only do this if the archive was created on a non-Unix system
+        NSString *strPath = [self stringByReplacingOccurrencesOfString:@"\\" withString:@"/"];
+        
+        // Percent-encode file path (where path is defined by https://tools.ietf.org/html/rfc8089)
+        // The key part is to allow characters "." and "/" and disallow "%".
+        // CharacterSet.urlPathAllowed seems to do the job
 #if (__MAC_OS_X_VERSION_MIN_REQUIRED >= 1090 || __IPHONE_OS_VERSION_MIN_REQUIRED >= 70000 || __WATCH_OS_VERSION_MIN_REQUIRED >= 20000 || __TV_OS_VERSION_MIN_REQUIRED >= 90000)
-    strPath = [strPath stringByAddingPercentEncodingWithAllowedCharacters:NSCharacterSet.URLPathAllowedCharacterSet];
-#else
-    // Testing availability of @available (https://stackoverflow.com/a/46927445/1033581)
-#if __clang_major__ < 9
-    // Xcode 8-
-    if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber10_8_4) {
-#else
-    // Xcode 9+
-    if (@available(macOS 10.9, iOS 7.0, watchOS 2.0, tvOS 9.0, *)) {
-#endif
         strPath = [strPath stringByAddingPercentEncodingWithAllowedCharacters:NSCharacterSet.URLPathAllowedCharacterSet];
-    } else {
-        strPath = [strPath stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
-    }
-#endif
-    
-    // `NSString.stringByAddingPercentEncodingWithAllowedCharacters:` may theorically fail: https://stackoverflow.com/questions/33558933/
-    // But because we auto-detect encoding using `NSString.stringEncodingForData:encodingOptions:convertedString:usedLossyConversion:`,
-    // we likely already prevent UTF-16, UTF-32 and invalid Unicode in the form of unpaired surrogate chars: https://stackoverflow.com/questions/53043876/
-    // To be on the safe side, we will still perform a guard check.
-    if (strPath == nil) {
-        return nil;
-    }
-    
-    // Add scheme "file:///" to support sanitation on names with a colon like "file:a/../../../usr/bin"
-    strPath = [@"file:///" stringByAppendingString:strPath];
-    
-    // Sanitize path traversal characters to prevent directory backtracking. Ignoring these characters mimicks the default behavior of the Unarchiving tool on macOS.
-    // "../../../../../../../../../../../tmp/test.txt" -> "tmp/test.txt"
-    // "a/b/../c.txt" -> "a/c.txt"
-    strPath = [NSURL URLWithString:strPath].standardizedURL.absoluteString;
-    
-    // Remove the "file:///" scheme
-    strPath = [strPath substringFromIndex:8];
-    
-    // Remove the percent-encoding
-#if (__MAC_OS_X_VERSION_MIN_REQUIRED >= 1090 || __IPHONE_OS_VERSION_MIN_REQUIRED >= 70000 || __WATCH_OS_VERSION_MIN_REQUIRED >= 20000 || __TV_OS_VERSION_MIN_REQUIRED >= 90000)
-    strPath = strPath.stringByRemovingPercentEncoding;
 #else
-    // Testing availability of @available (https://stackoverflow.com/a/46927445/1033581)
+        // Testing availability of @available (https://stackoverflow.com/a/46927445/1033581)
 #if __clang_major__ < 9
-    // Xcode 8-
-    if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber10_8_4) {
+        // Xcode 8-
+        if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber10_8_4) {
 #else
-    // Xcode 9+
-    if (@available(macOS 10.9, iOS 7.0, watchOS 2.0, tvOS 9.0, *)) {
+            // Xcode 9+
+            if (@available(macOS 10.9, iOS 7.0, watchOS 2.0, tvOS 9.0, *)) {
 #endif
-        strPath = strPath.stringByRemovingPercentEncoding;
-    } else {
-        strPath = [strPath stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
-    }
+                strPath = [strPath stringByAddingPercentEncodingWithAllowedCharacters:NSCharacterSet.URLPathAllowedCharacterSet];
+            } else {
+                strPath = [strPath stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+            }
 #endif
-    
-    return strPath;
-}
-
-@end
+            
+            // `NSString.stringByAddingPercentEncodingWithAllowedCharacters:` may theorically fail: https://stackoverflow.com/questions/33558933/
+            // But because we auto-detect encoding using `NSString.stringEncodingForData:encodingOptions:convertedString:usedLossyConversion:`,
+            // we likely already prevent UTF-16, UTF-32 and invalid Unicode in the form of unpaired surrogate chars: https://stackoverflow.com/questions/53043876/
+            // To be on the safe side, we will still perform a guard check.
+            if (strPath == nil) {
+                return nil;
+            }
+            
+            // Add scheme "file:///" to support sanitation on names with a colon like "file:a/../../../usr/bin"
+            strPath = [@"file:///" stringByAppendingString:strPath];
+            
+            // Sanitize path traversal characters to prevent directory backtracking. Ignoring these characters mimicks the default behavior of the Unarchiving tool on macOS.
+            // "../../../../../../../../../../../tmp/test.txt" -> "tmp/test.txt"
+            // "a/b/../c.txt" -> "a/c.txt"
+            strPath = [NSURL URLWithString:strPath].standardizedURL.absoluteString;
+            
+            // Remove the "file:///" scheme
+            strPath = [strPath substringFromIndex:8];
+            
+            // Remove the percent-encoding
+#if (__MAC_OS_X_VERSION_MIN_REQUIRED >= 1090 || __IPHONE_OS_VERSION_MIN_REQUIRED >= 70000 || __WATCH_OS_VERSION_MIN_REQUIRED >= 20000 || __TV_OS_VERSION_MIN_REQUIRED >= 90000)
+            strPath = strPath.stringByRemovingPercentEncoding;
+#else
+            // Testing availability of @available (https://stackoverflow.com/a/46927445/1033581)
+#if __clang_major__ < 9
+            // Xcode 8-
+            if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber10_8_4) {
+#else
+                // Xcode 9+
+                if (@available(macOS 10.9, iOS 7.0, watchOS 2.0, tvOS 9.0, *)) {
+#endif
+                    strPath = strPath.stringByRemovingPercentEncoding;
+                } else {
+                    strPath = [strPath stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+                }
+#endif
+                
+                return strPath;
+            }
+            
+            @end
